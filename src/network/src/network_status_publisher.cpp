@@ -22,6 +22,8 @@
 
 #include <memory>
 
+#include <algorithm>
+
 class NetworkStatusPublisher: public rclcpp::Node {
     public: rclcpp::TimerBase::SharedPtr timer;
     rclcpp::Publisher < std_msgs::msg::String > ::SharedPtr publisher;
@@ -104,7 +106,10 @@ class NetworkStatusPublisher: public rclcpp::Node {
         std::string ip = call_out_cmd("robonet-getip");
         return ip;
     }
-    std::string center_ip_address(const std::string & ip_address, int total_width = 15) {
+    std::string center_ip_address(const std::string & ip, int total_width = 15) {
+        std::string ip_address = ip;
+        ip_address.erase(std::remove(ip_address.begin(), ip_address.end(), '\n'), ip_address.cend());
+        ip_address.erase(std::remove(ip_address.begin(), ip_address.end(), ' '), ip_address.cend());
         int padding = (total_width - ip_address.length()) / 2;
         std::string formatted_string = std::string(padding, ' ') + ip_address + std::string(padding, ' ');
         if((total_width - ip_address.length()) % 2 != 0) {
@@ -127,6 +132,8 @@ class NetworkStatusPublisher: public rclcpp::Node {
         } else {
             mode_int = 0;
         }
+
+
         std::string mode = std::to_string(mode_int);
         std::string json_string = "{";
         json_string += "\"mode\": \"" + mode + "\",";
@@ -139,6 +146,8 @@ class NetworkStatusPublisher: public rclcpp::Node {
     void publish_network_status() {
         auto message = std_msgs::msg::String();
         message.data = build_json();
+        RCLCPP_INFO(this->get_logger(), "%s", message.data.c_str());
+
         publisher -> publish(message);
     }
 };
