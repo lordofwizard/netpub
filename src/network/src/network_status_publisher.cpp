@@ -27,8 +27,8 @@ class NetworkStatusPublisher: public rclcpp::Node {
     rclcpp::Publisher < std_msgs::msg::String > ::SharedPtr publisher;
     NetworkStatusPublisher(): Node("network_status_publisher"),
     counter(0) {
-        publisher = this - > create_publisher < std_msgs::msg::String > ("robot/network_status", 10);
-        timer = this - > create_wall_timer(std::chrono::seconds(1), std::bind( & NetworkStatusPublisher::publish_network_status, this));
+        publisher = this -> create_publisher < std_msgs::msg::String > ("robot/network_status", 10);
+        timer = this -> create_wall_timer(std::chrono::seconds(1), std::bind( & NetworkStatusPublisher::publish_network_status, this));
     }
     private: std::string call_out_cmd(const std::string & command_string) {
         std::string output;
@@ -139,7 +139,7 @@ class NetworkStatusPublisher: public rclcpp::Node {
     void publish_network_status() {
         auto message = std_msgs::msg::String();
         message.data = build_json();
-        publisher - > publish(message);
+        publisher -> publish(message);
     }
 };
 int main(int argc, char * argv[]) {
