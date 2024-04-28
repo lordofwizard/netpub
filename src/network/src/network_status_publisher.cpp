@@ -25,7 +25,12 @@
 class NetworkStatusPublisher : public rclcpp::Node {
     public:
         rclcpp::TimerBase::SharedPtr timer;
-        rclcpp::Publisher<std_msgs::msg::String>::SharedPtr json_data_publisher;
+        rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher;
+
+    NetworkStatusPublisher() : Node("network_status_publisher"), counter(0) {
+        publisher = this->create_publisher<std_msgs::msg::String>("robot/network_status", 10);
+        timer = this->create_wall_timer(std::chrono::seconds(1), std::bind(&NetworkStatusPublisher::publish_network_status, this));
+    }
 
     private:
         std::string call_out_cmd(const std::string & command_string) {
@@ -125,7 +130,7 @@ class NetworkStatusPublisher : public rclcpp::Node {
 
             std::string status = which_type_on();
             std::string info = get_ssid_from_iw_dev_output();
-            std::string ip = give_ip();
+            std::string ip = center_ip_address(give_ip());
 
             if (status == "wifi") {
                 mode_int = 1;
@@ -143,11 +148,11 @@ class NetworkStatusPublisher : public rclcpp::Node {
             std::string mode = std::to_string(mode_int);
 
 
-            std::string json_string = "{\n";
-            json_string += "    \"mode\": \"" + mode + "\",\n";
-            json_string += "    \"status\": \"" + status + "\",\n";
-            json_string += "    \"info\": \"" + info + "\",\n";
-            json_string += "    \"ip\": \"" + ip + "\"\n";
+            std::string json_string = "{";
+            json_string += "\"mode\": \"" + mode + "\",";
+            json_string += " \"status\": \"" + status + "\",";
+            json_string += "\"info\": \"" + info + "\",";
+            json_string += "\"ip\": \"" + ip + "\"";
             json_string += "}";
             return json_string;
 
@@ -156,12 +161,10 @@ class NetworkStatusPublisher : public rclcpp::Node {
         void publish_network_status () {
             auto message = std_msgs::msg::String();
             message.data = build_json();
-            json_data_publisher->publish(message);
+            publisher->publish(message);
         }
-    NetworkStatusPublisher() : Node("network_status_publisher"), counter(0) {
-        json_data_publisher = this->create_publisher<std_msgs::msg::String>("robot/network_status", 10);
-        timer = this->create_wall_timer(std::chrono::seconds(1), std::bind(&NetworkStatusPublisher::publish_network_status, this));
-    }
+
+    
 
 };
 
